@@ -9,7 +9,10 @@
         dir: "../aap_configuration/vars"
         extensions:
           - 'yml'
+          - 'yaml'
 
     - name: Run deployment
       ansible.builtin.include_role:
         name: "infra.aap_configuration.dispatch"
+
+  
