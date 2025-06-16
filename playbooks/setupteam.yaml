@@ -1,0 +1,75 @@
+---
+- name: Setup Tenant Team with Repo and Pipelines
+  hosts: all
+  collections:
+    - community.general
+    - ansible.scm
+  vars:
+    template_repo_path: "something"
+    github_username: "something"
+    github_email: "someone@somewhere.com"
+    github_token: "something"
+    github_api_url: "something"
+    github_org: "something"
+    github_secret: "something"
+    tenant_team: "tenant"
+    aap_pipeline_webhook_url: "aap_hostname/api/controller/v2/workflow_job_templates/by_name/tenant_code_pipeline"
+    temp_repo_path: "/tmp/working"
+
+
+  tasks:
+    - name: Set the repo name
+      ansible.builtin.set_fact:
+        repo_name: "aap_tenant_{{ tenant_team }}"
+
+    - name: Create github repo for the team
+      community.general.github_repo:
+        username: "{{ github_username }}"
+        password: "{{ github_password }}"
+        api_url: "{{ github_api_url }}"
+        name: repo_name
+        organization: "{{ github_org }}"
+      register: _github_repo_details
+
+    - name: Clone the repo locally
+      ansible.scm.git_retrieve:
+        origin:
+          token: "{{ github_token }}"
+          url: "{{ _github_repo_details.repo.git_url }}"
+        parent_directory: "{{ temp_repo_path }}"
+
+    - name: Add files from template_repo_path
+      ansible.builtin.copy:
+        src: "{{ template_repo_path }}"
+        dest: "{{ temp_repo_path }}"
+        mode: '0644'
+
+    - name: Push the repo back to github
+      ansible.scm.git_publish:
+        token: "{{ github_token }}"
+        user:
+          email: "{{ github_email }}"
+          name: "{{ github_username }}"
+        commit:
+          message: "Setup tenant git repo with initial contents"
+        path: "{{ temp_repo_path }}"
+        remove: true
+
+    - name: "TODO: Add branch protection"
+      ansible.builtin.debug:
+        msg: "TODO: Add branch protection rules to repo"
+
+    - name: Add webhooks
+      community.general.github_webhook:
+        repository: "{{ github_org }}/{{ repo_name }}"
+        url: "{{ aap_pipeline_webhook_url }}"
+        content_type: json
+        secret: "{{ github_secret }}"
+        insecure_ssl: false
+        events:
+          - push
+          - pull_request
+        user: "{{ github_username }}"
+        token: "{{ github_token }}"
+        github_url: "{{ github_api_url }}"
+...

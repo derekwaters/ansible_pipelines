@@ -1,0 +1,37 @@
+---
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+      
+  - repo: https://github.com/ansible/ansible-lint.git
+    rev: v25.1.3
+    hooks:
+      - id: ansible-lint
+        pass_filenames: false
+        always_run: true
+        entry: ansible-lint
+        args:
+          - --profile=production
+        # Potentially we can add a custom rules folder
+        # as part of the git repo and refer to it here?
+        # But probably better to include in the system folder
+        # for the default DEV system.
+
+        additional_dependencies:
+          - ansible-core>=2.13
+          - yamllint>=1.26,<2.0
+
+  - repo: https://github.com/DavidAnson/markdownlint-cli2
+    rev: v0.17.2
+    hooks:
+      - id: markdownlint-cli2
+
+  # Python code formatting hook - this could be optional
+  - repo: https://github.com/psf/black
+    rev: 22.10.0
+    hooks:
+    -   id: black
+...
