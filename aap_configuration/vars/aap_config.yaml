@@ -1,0 +1,158 @@
+---
+controller_organizations:
+  - name: "build"
+    description: "Automated Build Pipeline org"
+    state: present
+    galaxy_credentials:
+      - ah_published
+      - ah_certified
+      - ah_community
+
+controller_credentials:
+  - name: "github-api-token"
+    description: "API Token for GitHub"
+    organization: "build"
+    credential_type: "Source Control"
+    inputs:
+      username: "{{ github_username }}"
+      token: "{{ github_api_token }}"
+
+controller_projects:
+  - name: "build_pipelines"
+    description: "Automated Build Pipelines"
+    organization: "build"
+    scm_type: git
+    scm_url: "https://github.com/derekwaters/ansible_pipelines.git"
+    scm_branch: main
+    scm_clean: true
+    scm_update_on_launch: true
+    update_project: true
+    wait: true
+    state: present
+
+controller_inventories:
+  - name: "build_servers"
+    description: "Hosts used for Pipelines"
+    organization: "build"
+    state: present
+
+controller_hosts:
+  - name: "localhost"
+    description: "Local Host for Pipelines"
+    inventory: "build_servers"
+    state: present
+    enabled: true
+    variables:
+      ansible_connection: local 
+
+controller_execution_environments:
+  - name: "pipelines_ee"
+    description: "Execution Environment used for build functions"
+    organization: "build"
+    image: "quay.io/rh-ee-dwaters/pipelines-ee"
+    state: present
+
+controller_templates:
+  - name: "precommit_checks"
+    playbook: "aap_configuration/playbooks/precommit_checks.yml"
+    job_type: "run"
+    organization: "build"
+    inventory: "build_servers"
+    project: "build_pipelines"
+    execution_environment: "pipelines_ee"
+    ask_variables_on_launch: true
+    credentials:
+      - "github-api-token"
+    state: present
+
+  - name: "test_checks"
+    playbook: "aap_configuration/playbooks/test_checks.yml"
+    job_type: "run"
+    organization: "build"
+    inventory: "build_servers"
+    project: "build_pipelines"
+    execution_environment: "pipelines_ee"
+    ask_variables_on_launch: true
+    credentials:
+      - "github-api-token"
+    state: present
+
+  - name: "deploy_to_dev"
+    playbook: "aap_configuration/playbooks/deploy_to_dev.yml"
+    job_type: "run"
+    organization: "build"
+    inventory: "build_servers"
+    project: "build_pipelines"
+    execution_environment: "pipelines_ee"
+    ask_variables_on_launch: true
+    credentials:
+      - "github-api-token"
+    state: present
+
+  - name: "build_failed_incident"
+    playbook: "aap_configuration/playbooks/build_failed_incident.yml"
+    job_type: "run"
+    organization: "build"
+    inventory: "build_servers"
+    project: "build_pipelines"
+    ask_variables_on_launch: true
+    state: present
+
+  - name: "build_success_notification"
+    playbook: "aap_configuration/playbooks/build_success_notification.yml"
+    job_type: "run"
+    organization: "build"
+    inventory: "build_servers"
+    project: "build_pipelines"
+    ask_variables_on_launch: true
+    state: present
+
+controller_workflows:
+  - name: "tenant_code_push_pipeline"
+    description: "Handle github pushes of tenant code"
+    organization: "build"
+    inventory: "build_servers"
+    state: present
+    ask_variables_on_launch: true
+    simplified_workflow_nodes:
+      - identifier: precommit_checks
+        unified_job_template: "precommit_checks"
+        success_nodes:
+          - "test_checks"
+        failure_nodes:
+          - "build_failed_incident"
+        always_nodes: []
+        credentials: []
+
+      - identifier: test_checks
+        unified_job_template: "test_checks"
+        success_nodes:
+          - "deploy_to_dev"
+        failure_nodes:
+          - "build_failed_incident"
+        always_nodes: []
+        credentials: []
+
+      - identifier: deploy_to_dev
+        unified_job_template: "deploy_to_dev"
+        success_nodes:
+          - "build_success_notification"
+        failure_nodes:
+          - "build_failed_incident"
+        always_nodes: []
+        credentials: []
+
+      - identifier: build_failed_incident
+        unified_job_template: "build_failed_incident"
+        success_nodes: []
+        failure_nodes: []
+        always_nodes: []
+        credentials: []
+
+      - identifier: build_success_notification
+        unified_job_template: "build_success_notification"
+        success_nodes: []
+        failure_nodes: []
+        always_nodes: []
+        credentials: []
+...

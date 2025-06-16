@@ -1,0 +1,26 @@
+---
+- name: Perform additional test checks
+  hosts: all
+  gather_facts: false
+  vars:
+    remote_repo: "something"
+    remote_branch: "dev"
+    working_dir: "/tmp/working"
+
+  tasks:
+    - name: Pull the code repository
+      ansible.builtin.git:
+        repo: "{{ remote_repo }}"
+        dest: "{{ working_dir }}"
+        single_branch: yes
+        version: "{{ remote_branch }}"
+
+    - name: Run some tests
+      ansible.builtin.debug:
+        msg: "TODO: Run some tests"
+      register: __test_output
+
+    - name: Check the response
+      ansible.builtin.fail:
+        msg: Testing for Ansible code branch failed
+      when: __test_output.rc != 0

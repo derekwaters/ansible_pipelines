@@ -13,7 +13,8 @@
     github_org: "something"
     github_secret: "something"
     tenant_team: "tenant"
-    aap_pipeline_webhook_url: "aap_hostname/api/controller/v2/workflow_job_templates/by_name/tenant_code_pipeline"
+    aap_push_webhook_url: "aap_hostname/api/controller/v2/workflow_job_templates/by_name/tenant_code_push_pipeline"
+    aap_merge_webhook_url: "aap_hostname/api/controller/v2/workflow_job_templates/by_name/tenant_code_merge_pipeline"
     temp_repo_path: "/tmp/working"
 
 
@@ -59,15 +60,27 @@
       ansible.builtin.debug:
         msg: "TODO: Add branch protection rules to repo"
 
-    - name: Add webhooks
+    - name: Add push webhook
       community.general.github_webhook:
         repository: "{{ github_org }}/{{ repo_name }}"
-        url: "{{ aap_pipeline_webhook_url }}"
+        url: "{{ aap_push_webhook_url }}"
         content_type: json
         secret: "{{ github_secret }}"
         insecure_ssl: false
         events:
           - push
+        user: "{{ github_username }}"
+        token: "{{ github_token }}"
+        github_url: "{{ github_api_url }}"
+
+    - name: Add merge webhook
+      community.general.github_webhook:
+        repository: "{{ github_org }}/{{ repo_name }}"
+        url: "{{ aap_merge_webhook_url }}"
+        content_type: json
+        secret: "{{ github_secret }}"
+        insecure_ssl: false
+        events:
           - pull_request
         user: "{{ github_username }}"
         token: "{{ github_token }}"

@@ -1,0 +1,13 @@
+---
+- name: Deploy branch to dev
+  hosts: all
+  gather_facts: false
+  vars:
+    remote_repo: "something"
+    remote_branch: "dev"
+    working_dir: "/tmp/working"
+
+  tasks:
+    - name: Deploy the branch to dev
+      ansible.builtin.debug:
+        msg: "TODO: Deploy this branch to the dev environment"

@@ -1,0 +1,28 @@
+---
+- name: Perform the standard code linting from the pre-commit definitions
+  hosts: all
+  gather_facts: false
+  vars:
+    remote_repo: "something"
+    remote_branch: "dev"
+    working_dir: "/tmp/working"
+
+  tasks:
+    - name: Pull the code repository
+      ansible.builtin.git:
+        repo: "{{ remote_repo }}"
+        dest: "{{ working_dir }}"
+        single_branch: yes
+        version: "{{ remote_branch }}"
+
+    - name: Run the pre-commit
+      ansible.builtin.command:
+        cmd: "pre-commit ."
+        chdir: "{{ working_dir }}"
+      register: __precommit_output
+      ignore_errors: true
+
+    - name: Validate the response
+      ansible.builtin.fail:
+        msg: pre-commit for Ansible code branch failed
+      when: __precommit_output.rc != 0
