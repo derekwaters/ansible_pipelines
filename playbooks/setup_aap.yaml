@@ -14,5 +14,3 @@
     - name: Run deployment
       ansible.builtin.include_role:
         name: "infra.aap_configuration.dispatch"
-
-  

@@ -12,15 +12,20 @@
       ansible.builtin.git:
         repo: "{{ remote_repo }}"
         dest: "{{ working_dir }}"
-        single_branch: yes
+        single_branch: true
         version: "{{ remote_branch }}"
 
     - name: Run the pre-commit
       ansible.builtin.command:
         cmd: "pre-commit ."
         chdir: "{{ working_dir }}"
+      changed_when: false
       register: __precommit_output
       ignore_errors: true
+
+    - name: Update the build_log summary
+      ansible.builtin.set_fact:
+        build_log: "{{ __precommit_output }} ~ {{ build_log | default('') }}"
 
     - name: Validate the response
       ansible.builtin.fail:

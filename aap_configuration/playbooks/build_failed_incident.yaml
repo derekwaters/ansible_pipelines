@@ -1,0 +1,16 @@
+---
+- name: Generate a failure incident
+  hosts: all
+  gather_facts: false
+  vars:
+    destination_email: "pipelines@company.com.au"
+    source_email: "aap_build_bot@company.com.au"
+
+  tasks:
+    # TODO: Make this a ServiceNow incident instead
+    - name: Notify the results
+      community.general.mail:
+        to: "{{ destination_email }}"
+        subject: "FAILED BUILD: Log for {{ repo_name }} for branch {{ branch_name }}"
+        body: "{{ build_log }}"
+        from: "{{ source_email }}"

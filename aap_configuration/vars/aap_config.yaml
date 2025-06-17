@@ -1,34 +1,29 @@
 ---
-controller_organizations:
+aap_organizations:
   - name: "build"
     description: "Automated Build Pipeline org"
     state: present
-    galaxy_credentials:
-      - ah_published
-      - ah_certified
-      - ah_community
 
 controller_credentials:
   - name: "github-api-token"
     description: "API Token for GitHub"
     organization: "build"
-    credential_type: "Source Control"
+    credential_type: "GitHub Personal Access Token"
     inputs:
-      username: "{{ github_username }}"
       token: "{{ github_api_token }}"
 
 controller_projects:
-  - name: "build_pipelines"
-    description: "Automated Build Pipelines"
-    organization: "build"
-    scm_type: git
-    scm_url: "https://github.com/derekwaters/ansible_pipelines.git"
-    scm_branch: main
-    scm_clean: true
-    scm_update_on_launch: true
-    update_project: true
-    wait: true
-    state: present
+   - name: "build_pipelines"
+     description: "Automated Build Pipelines"
+     organization: "build"
+     scm_type: git
+     scm_url: "https://github.com/derekwaters/ansible_pipelines.git"
+     scm_branch: main
+     scm_clean: true
+     scm_update_on_launch: true
+     update_project: true
+     wait: true
+     state: present
 
 controller_inventories:
   - name: "build_servers"
@@ -54,43 +49,43 @@ controller_execution_environments:
 
 controller_templates:
   - name: "precommit_checks"
-    playbook: "aap_configuration/playbooks/precommit_checks.yml"
+    playbook: "aap_configuration/playbooks/precommit_checks.yaml"
     job_type: "run"
     organization: "build"
     inventory: "build_servers"
     project: "build_pipelines"
     execution_environment: "pipelines_ee"
     ask_variables_on_launch: true
-    credentials:
-      - "github-api-token"
+    extra_vars:
+      github_api_token: "{{ github_api_token }}"
     state: present
 
   - name: "test_checks"
-    playbook: "aap_configuration/playbooks/test_checks.yml"
+    playbook: "aap_configuration/playbooks/test_checks.yaml"
     job_type: "run"
     organization: "build"
     inventory: "build_servers"
     project: "build_pipelines"
     execution_environment: "pipelines_ee"
     ask_variables_on_launch: true
-    credentials:
-      - "github-api-token"
+    extra_vars:
+      github_api_token: "{{ github_api_token }}"
     state: present
 
   - name: "deploy_to_dev"
-    playbook: "aap_configuration/playbooks/deploy_to_dev.yml"
+    playbook: "aap_configuration/playbooks/deploy_to_dev.yaml"
     job_type: "run"
     organization: "build"
     inventory: "build_servers"
     project: "build_pipelines"
     execution_environment: "pipelines_ee"
     ask_variables_on_launch: true
-    credentials:
-      - "github-api-token"
+    extra_vars:
+      github_api_token: "{{ github_api_token }}"
     state: present
 
   - name: "build_failed_incident"
-    playbook: "aap_configuration/playbooks/build_failed_incident.yml"
+    playbook: "aap_configuration/playbooks/build_failed_incident.yaml"
     job_type: "run"
     organization: "build"
     inventory: "build_servers"
@@ -99,7 +94,7 @@ controller_templates:
     state: present
 
   - name: "build_success_notification"
-    playbook: "aap_configuration/playbooks/build_success_notification.yml"
+    playbook: "aap_configuration/playbooks/build_success_notification.yaml"
     job_type: "run"
     organization: "build"
     inventory: "build_servers"

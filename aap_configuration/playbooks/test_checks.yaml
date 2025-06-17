@@ -12,13 +12,17 @@
       ansible.builtin.git:
         repo: "{{ remote_repo }}"
         dest: "{{ working_dir }}"
-        single_branch: yes
+        single_branch: true
         version: "{{ remote_branch }}"
 
     - name: Run some tests
       ansible.builtin.debug:
         msg: "TODO: Run some tests"
       register: __test_output
+
+    - name: Update the build_log summary
+      ansible.builtin.set_fact:
+        build_log: "{{ __test_output }} ~ {{ build_log | default('') }}"
 
     - name: Check the response
       ansible.builtin.fail:
