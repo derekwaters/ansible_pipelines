@@ -14,3 +14,19 @@
     - name: Run deployment
       ansible.builtin.include_role:
         name: "infra.aap_configuration.dispatch"
+
+    - name: Setup access token for webhooks
+      ansible.controller.token:
+        description: "Webhook Pipeline Access Token"
+        scope: "write"
+        application: "build_pipelines"
+        state: present
+      register: controller_oauthtoken
+
+    - name: Store that token for later
+      ansible.builtin.set_fact:
+        pipeline_token: "{{ controller_oauthtoken.ansible_facts.controller_token.token }}"
+
+    - name: Write out the new token value
+      ansible.builtin.debug:
+        msg: "Access token for pipeline access to AAP: {{ pipeline_token }}"

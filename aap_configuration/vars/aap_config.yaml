@@ -4,6 +4,22 @@ aap_organizations:
     description: "Automated Build Pipeline org"
     state: present
 
+aap_user_accounts:
+  - username: "build_agent"
+    password: "Password1"
+    email: "build_agent@aap"
+    is_superuser: false
+    is_system_auditor: false
+    organization: "build"
+    state: present
+
+aap_applications:
+  - name: build_pipeline
+    organization: "build"
+    description: "Application for access to build pipelines"
+    authorization_grant_type: password
+    client_type: public
+    
 controller_credentials:
   - name: "github-api-token"
     description: "API Token for GitHub"
@@ -108,6 +124,11 @@ controller_workflows:
     organization: "build"
     inventory: "build_servers"
     state: present
+    extra_vars:
+      remote_repo: "tbd"
+      remote_branch: "dev"
+      destination_email: "pipelines@company.com.au"
+      source_email: "aap_build_bot@company.com.au"
     ask_variables_on_launch: true
     simplified_workflow_nodes:
       - identifier: precommit_checks
