@@ -17,6 +17,10 @@
 
     - name: Setup access token for webhooks
       ansible.controller.token:
+        controller_host: "{{ aap_hostname }}"
+        controller_username: "{{ aap_username }}"
+        controller_password: "{{ aap_password }}"
+        validate_certs: "{{ aap_validate_certs | default(true) }}"
         description: "Webhook Pipeline Access Token"
         scope: "write"
         application: "build_pipelines"

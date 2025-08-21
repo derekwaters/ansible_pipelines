@@ -7,7 +7,7 @@ aap_organizations:
 aap_user_accounts:
   - username: "build_agent"
     password: "Password1"
-    email: "build_agent@aap"
+    email: "build_agent@example.com"
     is_superuser: false
     is_system_auditor: false
     organization: "build"
@@ -119,8 +119,8 @@ controller_templates:
     state: present
 
 controller_workflows:
-  - name: "tenant_code_push_pipeline"
-    description: "Handle github pushes of tenant code"
+  - name: "01-tenant_code_push_pipeline"
+    description: "Perform tests on tenant code pushes"
     organization: "build"
     inventory: "build_servers"
     state: present
@@ -171,4 +171,5 @@ controller_workflows:
         failure_nodes: []
         always_nodes: []
         credentials: []
+ 
 ...
