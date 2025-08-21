@@ -1,0 +1,8 @@
+---
+collections:
+  - name: ansible.scm
+  - name: community.general
+  - name: ansible.controller
+  - name: ansible.platform
+  - name: infra.aap_configuration
+  - name: infra.ee_utilities

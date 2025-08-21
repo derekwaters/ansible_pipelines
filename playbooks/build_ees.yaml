@@ -1,0 +1,16 @@
+---
+- name: Setup Pipeline Execution Environments for AAP
+  hosts: all
+  gather_facts: false
+
+  tasks:
+    - name: Load the AAP definition files
+      ansible.builtin.include_vars:
+        dir: "../ee_configuration/vars"
+        extensions:
+          - 'yml'
+          - 'yaml'
+
+    - name: Run deployment
+      ansible.builtin.include_role:
+        name: "infra.ee_utilities.ee_builder"

@@ -1,0 +1,26 @@
+---
+ee_builder_dir_clean: false
+ee_builder_dir: "/tmp/"
+ee_base_registry_username: "{{ base_registry_username }}"
+ee_base_registry_password: "{{ base_registry_password }}"
+ee_registry_dest: "{{ registry_destination }}"
+ee_registry_username: "{{ registry_destination_username | default(ee_base_registry_username) }}"
+ee_registry_password: "{{ registry_destination_password | default(ee_base_registry_password) }}"
+ee_pull_collections_from_hub: false
+ee_verbosity: 3
+
+ee_list:
+  - name: pipelines-ee
+    images:
+      base_image: 
+        name: registry.redhat.io/ansible-automation-platform-24/ee-minimal-rhel9:latest
+    alt_name: Execution environment for build pipelines
+    tag: "latest"
+    dependencies:
+      python:
+        - pre-commit
+        - ansible-lint
+        - yamllint
+      galaxy:
+        collections:
+          - community.general

@@ -1,9 +1,17 @@
 
 # Example usage
-ansible-playbook -i localhost \
+ansible-playbook -i inventory \
   -e aap_hostname=something \
   -e aap_username=something \
   -e aap_password=something \
+  (-e aap_validate_certs=true) \
   -e github_username=something \
-  -e github_token=something \
+  -e github_api_token=something \
   setup_aap.yaml
+
+# Example of building the pipeline ee
+ansible-playbook -i inventory \
+  -e base_registry_username=<username> \
+  -e base_registry_password=<password> \
+  -e registry_destination=<image_target> \
+  build_ees.yaml
