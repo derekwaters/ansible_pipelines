@@ -7,7 +7,6 @@
     source_email: "aap_build_bot@company.com.au"
 
   tasks:
-    # TODO: Make this a ServiceNow incident instead
     - name: Notify the results
       community.general.mail:
         to: "{{ destination_email }}"
