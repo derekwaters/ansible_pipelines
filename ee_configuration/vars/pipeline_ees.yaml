@@ -13,7 +13,7 @@ ee_list:
   - name: pipelines-ee
     images:
       base_image: 
-        name: registry.redhat.io/ansible-automation-platform-24/ee-minimal-rhel9:latest
+        name: registry.redhat.io/ansible-automation-platform-25/ee-minimal-rhel8:latest
     alt_name: Execution environment for build pipelines
     tag: "latest"
     dependencies:
@@ -24,3 +24,5 @@ ee_list:
       galaxy:
         collections:
           - community.general
+    options:
+      package_manager_path: /usr/bin/microdnf
