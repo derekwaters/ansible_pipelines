@@ -16,20 +16,20 @@
         name: "infra.aap_configuration.dispatch"
 
     - name: Setup access token for webhooks
-      ansible.controller.token:
-        controller_host: "{{ aap_hostname }}"
-        controller_username: "{{ aap_username }}"
-        controller_password: "{{ aap_password }}"
+      ansible.platform.token:
+        aap_hostname: "{{ aap_hostname }}"
+        aap_username: "{{ aap_username }}"
+        aap_password: "{{ aap_password }}"
         validate_certs: "{{ aap_validate_certs | default(true) }}"
         description: "Webhook Pipeline Access Token"
         scope: "write"
-        application: "build_pipelines"
+        application: "build_pipeline"
         state: present
-      register: controller_oauthtoken
+      register: aap_oauthtoken
 
     - name: Store that token for later
       ansible.builtin.set_fact:
-        pipeline_token: "{{ controller_oauthtoken.ansible_facts.controller_token.token }}"
+        pipeline_token: "{{ aap_oauthtoken.ansible_facts.aap_token.token }}"
 
     - name: Write out the new token value
       ansible.builtin.debug:
