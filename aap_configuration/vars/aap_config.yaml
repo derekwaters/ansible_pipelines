@@ -40,7 +40,9 @@ controller_credential_types:
     injectors:
       env:
         GPG_PASSPHRASE: '{{ passphrase }}'
-        GPG_PRIVATE_KEY: '{{ private_key }}'
+        GPG_PRIVATE_KEY_FILE: '{{ tower.filename.private_key_file }}'
+      file:
+        template.private_key_file: '{{ private_key }}'
 
 controller_credentials:
   - name: "github-api-token"

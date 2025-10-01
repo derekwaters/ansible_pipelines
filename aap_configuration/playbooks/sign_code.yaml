@@ -11,14 +11,12 @@
     - name: Debug the key stuff
       ansible.builtin.debug:
         msg:
-          - "Key: {{ lookup('ansible.builtin.env', 'GPG_PRIVATE_KEY') }}"
+          - "Key Filename: {{ lookup('ansible.builtin.env', 'GPG_PRIVATE_KEY_FILE') }}"
           - "Passphrase: {{ lookup('ansible.builtin.env', 'GPG_PASSPHRASE') }}"
 
-    - name: Write the signing key to a temporary file
-      ansible.builtin.copy:
-        content: "{{ lookup('ansible.builtin.env', 'GPG_PRIVATE_KEY') }}"
-        dest: /tmp/private.pgp
-        mode: '0600'
+    - name: Collect the filename in a variable
+      ansible.builtin.set_fact:
+        key_file: "{{ lookup('ansible.builtin.env', 'GPG_PRIVATE_KEY_FILE') }}"
 
     - name: Collect the passphrase in a variable
       ansible.builtin.set_fact:
@@ -26,7 +24,7 @@
 
     - name: Add the signing key to the keyring
       ansible.builtin.command:
-        cmd: 'gpg --batch --yes --allow-secret-key-import --pinentry-mode loopback --passphrase "{{ passphrase }}" --import /tmp/private.pgp'
+        cmd: 'gpg --batch --yes --allow-secret-key-import --pinentry-mode loopback --passphrase "{{ passphrase }}" --import {{ key_file }}'
       changed_when: false
       register: __import_output
       ignore_errors: true
