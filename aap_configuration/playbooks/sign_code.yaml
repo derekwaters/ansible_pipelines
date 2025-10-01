@@ -8,6 +8,12 @@
     working_dir: "/tmp/working"
 
   tasks:
+    - name: Debug the key stuff
+      ansible.builtin.debug:
+        msg:
+          - "Key: {{ lookup('ansible.builtin.env', 'GPG_PRIVATE_KEY') }}"
+          - "Passphrase: {{ lookup('ansible.builtin.env', 'GPG_PASSPHRASE') }}"
+
     - name: Write the signing key to a temporary file
       ansible.builtin.copy:
         content: "{{ lookup('ansible.builtin.env', 'GPG_PRIVATE_KEY') }}"

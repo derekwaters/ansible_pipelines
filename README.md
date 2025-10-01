@@ -46,3 +46,10 @@ Repository of components for building a modern software dev process for Ansible 
         https://api.github.com/repos/derekwaters/ansible-lint-custom-rules/rulesets/6047967
         
     - Setup webhooks
+
+
+
+## Generate signing keys
+gpg --full-generate-key
+gpg --output public.pgp --armor --export username@email   (This will be used to verify deployment of a project)
+gpg --output private.pgp --armor --export-secret-key username@email     (This will be used to sign a pipeline-approved project)
