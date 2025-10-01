@@ -20,6 +20,28 @@ aap_applications:
     authorization_grant_type: password
     client_type: public
     
+controller_credential_types:
+  - name: "gpg-signing-keys"
+    description: "Keys for signing Ansible code"
+    inputs:
+      fields:
+        - id: private_key
+          type: string
+          label: GPG Private Key Data
+          secret: true
+          multiline: true
+        - id: passphrase
+          type: string
+          label: Passphrase
+          secret: true
+      required:
+        - private_key
+        - passphrase
+    injectors:
+      env:
+        GPG_PASSPHRASE: '{{ passphrase }}'
+        GPG_PRIVATE_KEY: '{{ private_key }}'
+
 controller_credentials:
   - name: "github-api-token"
     description: "API Token for GitHub"
@@ -27,6 +49,13 @@ controller_credentials:
     credential_type: "GitHub Personal Access Token"
     inputs:
       token: "{{ github_api_token }}"
+  - name: "key-signing-test"
+    description: "GPG Key for signing Ansible code for test environment"
+    organization: "build"
+    credential_type: "gpg-signing-keys"
+    inputs:
+      private_key: "{{ key-signing-private-key }}"
+      passphrase: "{{ key-signing-passphrase }}"
 
 controller_projects:
    - name: "build_pipelines"
@@ -106,6 +135,7 @@ controller_templates:
     organization: "build"
     inventory: "build_servers"
     project: "build_pipelines"
+    execution_environment: "pipelines_ee"
     ask_variables_on_launch: true
     state: present
 
@@ -115,6 +145,17 @@ controller_templates:
     organization: "build"
     inventory: "build_servers"
     project: "build_pipelines"
+    execution_environment: "pipelines_ee"
+    ask_variables_on_launch: true
+    state: present
+
+  - name: "sign_code"
+    playbook: "aap_configuration/playbooks/sign_code.yaml"
+    job_type: "run"
+    organization: "build"
+    inventory: "build_servers"
+    project: "build_pipelines"
+    execution_environment: "sign_ee"
     ask_variables_on_launch: true
     state: present
 
@@ -143,11 +184,21 @@ controller_workflows:
       - identifier: test_checks
         unified_job_template: "test_checks"
         success_nodes:
-          - "deploy_to_dev"
+          - "sign_code"
         failure_nodes:
           - "build_failed_incident"
         always_nodes: []
         credentials: []
+
+      - identifier: sign_code
+        unified_job_template: "sign_code"
+        success_nodes:
+          - "deploy_to_dev"
+        failure_nodes:
+          - "build_failed_incident"
+        always_nodes: []
+        credentials:
+          - "key-signing-test"
 
       - identifier: deploy_to_dev
         unified_job_template: "deploy_to_dev"

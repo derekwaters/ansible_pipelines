@@ -1,0 +1,68 @@
+---
+- name: Sign the supplied code repo with a key injected through credentials
+  hosts: all
+  gather_facts: false
+  vars:
+    remote_repo: "something"
+    remote_branch: "dev"
+    working_dir: "/tmp/working"
+
+  tasks:
+    - name: Write the signing key to a temporary file
+      ansible.builtin.copy:
+        content: "{{ lookup('ansible.builtin.env', 'GPG_PRIVATE_KEY') }}"
+        dest: /tmp/private.pgp
+        mode: '0600'
+
+    - name: Collect the passphrase in a variable
+      ansible.builtin.set_fact:
+        passphrase: "{{ lookup('ansible.builtin.env', 'GPG_PASSPHRASE') }}"
+
+    - name: Add the signing key to the keyring
+      ansible.builtin.command:
+        cmd: 'gpg --batch --yes --allow-secret-key-import --pinentry-mode loopback --passphrase "{{ passphrase }}" --import /tmp/private.pgp'
+      changed_when: false
+      register: __import_output
+      ignore_errors: true
+
+    - name: Debug the response
+      ansible.builtin.debug:
+        var: __import_output
+
+    - name: Pull the code repository
+      ansible.builtin.git:
+        repo: "{{ remote_repo }}"
+        dest: "{{ working_dir }}"
+        single_branch: true
+        version: "{{ remote_branch }}"
+
+    - name: Check for the manifest file
+      ansible.builtin.stat:
+        path: "{{ working_dir }}/MANIFEST.in"
+      register: __manifest_file
+
+    - name: Fail if no manifest file is found
+      ansible.builtin.fail:
+        msg: "No MANIFEST.in file found in the root of the repository. This is required for ansible-sign to work."
+      when: not __manifest_file.stat.exists
+
+    - name: Run ansible-sign
+      ansible.builtin.command:
+        cmd: "ansible-sign project gpg-sign ."
+        chdir: "{{ working_dir }}"
+      changed_when: false
+      register: __ansible_sign_output
+      ignore_errors: true
+
+    - name: Debug the response
+      ansible.builtin.debug:
+        var: __ansible_sign_output
+
+    - name: Update the build_log summary
+      ansible.builtin.set_fact:
+        build_log: "{{ __ansible_sign_output }} ~ {{ build_log | default('') }}"
+
+    - name: Validate the response
+      ansible.builtin.fail:
+        msg: ansible-sign for Ansible code branch failed
+      when: __precommit_output.rc != 0
