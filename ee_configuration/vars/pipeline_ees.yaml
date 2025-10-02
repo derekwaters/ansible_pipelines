@@ -33,6 +33,8 @@ ee_list:
     alt_name: Execution environment for build signing
     tag: "latest"
     dependencies:
+      system:
+        - pinentry
       python:
         - ansible-sign
     options:
