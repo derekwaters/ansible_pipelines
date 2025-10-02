@@ -52,7 +52,7 @@
 
     - name: Run ansible-sign
       ansible.builtin.command:
-        cmd: "ansible-sign project gpg-sign ."
+        cmd: "ansible-sign --debug project gpg-sign ."
         chdir: "{{ working_dir }}"
       environment:
         ANSIBLE_SIGN_GPG_PASSPHRASE: "{{ passphrase }}"
