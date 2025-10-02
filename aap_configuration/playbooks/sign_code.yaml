@@ -78,4 +78,4 @@
     - name: Validate the response
       ansible.builtin.fail:
         msg: ansible-sign for Ansible code branch failed
-      when: __precommit_output.rc != 0
+      when: __ansible_sign_output.rc != 0
