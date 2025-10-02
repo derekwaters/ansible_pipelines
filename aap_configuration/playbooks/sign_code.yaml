@@ -52,8 +52,10 @@
 
     - name: Run ansible-sign
       ansible.builtin.command:
-        cmd: "ANSIBLE_SIGN_GPG_PASSPHRASE={{ passphrase }} ansible-sign project gpg-sign ."
+        cmd: "ansible-sign project gpg-sign ."
         chdir: "{{ working_dir }}"
+      environment:
+        ANSIBLE_SIGN_GPG_PASSPHRASE: "{{ passphrase }}"
       changed_when: false
       register: __ansible_sign_output
       ignore_errors: true
