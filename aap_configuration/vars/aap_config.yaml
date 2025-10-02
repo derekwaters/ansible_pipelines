@@ -36,10 +36,9 @@ controller_credential_types:
           secret: true
       required:
         - private_key
-        - passphrase
     injectors:
       env:
-        GPG_PASSPHRASE: '{{ passphrase }}'
+        ANSIBLE_SIGN_GPG_PASSPHRASE: '{{ passphrase }}'
         GPG_PRIVATE_KEY_FILE: '{{ tower.filename.private_key_file }}'
       file:
         template.private_key_file: '{{ private_key }}'
