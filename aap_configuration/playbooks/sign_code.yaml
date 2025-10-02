@@ -50,6 +50,13 @@
         msg: "No MANIFEST.in file found in the root of the repository. This is required for ansible-sign to work."
       when: not __manifest_file.stat.exists
 
+    - name: Test env setting
+      ansible.builtin.command:
+        cmd: "echo $ANSIBLE_SIGN_GPG_PASSPHRASE"
+        chdir: "{{ working_dir }}"
+      environment:
+        ANSIBLE_SIGN_GPG_PASSPHRASE: "{{ passphrase }}"
+
     - name: Run ansible-sign
       ansible.builtin.command:
         cmd: "ansible-sign --debug project gpg-sign ."
