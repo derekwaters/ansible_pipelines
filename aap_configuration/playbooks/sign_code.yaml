@@ -12,7 +12,7 @@
       ansible.builtin.debug:
         msg:
           - "Key Filename: {{ lookup('ansible.builtin.env', 'GPG_PRIVATE_KEY_FILE') }}"
-          - "Passphrase: {{ lookup('ansible.builtin.env', 'ANSIBLE_SIGN_GPG_PASSPHRASE') }}"
+          - "Passphrase: {{ lookup('ansible.builtin.env', 'GPG_PASSPHRASE') }}"
 
     - name: Collect the filename in a variable
       ansible.builtin.set_fact:
@@ -20,7 +20,7 @@
 
     - name: Collect the passphrase in a variable
       ansible.builtin.set_fact:
-        passphrase: "{{ lookup('ansible.builtin.env', 'ANSIBLE_SIGN_GPG_PASSPHRASE') }}"
+        passphrase: "{{ lookup('ansible.builtin.env', 'GPG_PASSPHRASE') }}"
 
     - name: Add the signing key to the keyring
       ansible.builtin.command:
@@ -52,7 +52,7 @@
 
     - name: Run ansible-sign
       ansible.builtin.command:
-        cmd: "ansible-sign project gpg-sign ."
+        cmd: "ANSIBLE_SIGN_GPG_PASSPHRASE={{ passphrase }} ansible-sign project gpg-sign ."
         chdir: "{{ working_dir }}"
       changed_when: false
       register: __ansible_sign_output
