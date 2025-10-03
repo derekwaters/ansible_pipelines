@@ -1,7 +1,7 @@
 ---
 - name: Sign the supplied code repo with a key injected through credentials
   hosts: all
-  gather_facts: false
+  gather_facts: true
   vars:
     remote_repo: "something"
     remote_branch: "dev"
