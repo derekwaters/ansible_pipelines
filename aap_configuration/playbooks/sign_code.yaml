@@ -8,12 +8,6 @@
     working_dir: "/tmp/working"
 
   tasks:
-    - name: Debug the key stuff
-      ansible.builtin.debug:
-        msg:
-          - "Key Filename: {{ lookup('ansible.builtin.env', 'GPG_PRIVATE_KEY_FILE') }}"
-          - "Passphrase: {{ lookup('ansible.builtin.env', 'GPG_PASSPHRASE') }}"
-
     - name: Collect the filename in a variable
       ansible.builtin.set_fact:
         key_file: "{{ lookup('ansible.builtin.env', 'GPG_PRIVATE_KEY_FILE') }}"
@@ -21,6 +15,18 @@
     - name: Collect the passphrase in a variable
       ansible.builtin.set_fact:
         passphrase: "{{ lookup('ansible.builtin.env', 'GPG_PASSPHRASE') }}"
+
+    - name: Collect the Github token in a variable
+      ansible.builtin.set_fact:
+        github_token: "{{ lookup('ansible.builtin.env', 'GITHUB_PAT') }}"
+
+    - name: Calculate a signing branch name
+      ansible.builtin.set_fact:
+        merge_branch: "ansible-signed-{{ remote_branch }}-{{ ansible_facts['date_time']['iso8601_basic_short'] }}"
+
+    - name: Debug the branch name
+      ansible.builtin.debug:
+        msg: "The merge branch name is {{ merge_branch }}"
 
     - name: Add the signing key to the keyring
       ansible.builtin.command:
@@ -33,16 +39,25 @@
       ansible.builtin.debug:
         var: __import_output
 
-    - name: Pull the code repository
-      ansible.builtin.git:
-        repo: "{{ remote_repo }}"
-        dest: "{{ working_dir }}"
-        single_branch: true
-        version: "{{ remote_branch }}"
+    - name: Retrieve the repo
+      ansible.scm.git_retrieve:
+        branch:
+          name: "{{ merge_branch }}"
+        origin:
+          url: "{{ remote_repo }}"
+          token: "{{ github_token }}"
+        upstream:
+          url: "{{ remote_repo }}"
+        parent_directory: "{{ working_dir }}"
+      register: __git_receive_output
+
+    - name: Set repo directory
+      ansible.builtin.set_fact:
+        repo_dir: "{{ __git_receive_output.path }}"
 
     - name: Check for the manifest file
       ansible.builtin.stat:
-        path: "{{ working_dir }}/MANIFEST.in"
+        path: "{{ repo_dir }}/MANIFEST.in"
       register: __manifest_file
 
     - name: Fail if no manifest file is found
@@ -50,17 +65,10 @@
         msg: "No MANIFEST.in file found in the root of the repository. This is required for ansible-sign to work."
       when: not __manifest_file.stat.exists
 
-    - name: Test env setting
-      ansible.builtin.command:
-        cmd: "echo $ANSIBLE_SIGN_GPG_PASSPHRASE"
-        chdir: "{{ working_dir }}"
-      environment:
-        ANSIBLE_SIGN_GPG_PASSPHRASE: "{{ passphrase }}"
-
     - name: Run ansible-sign
       ansible.builtin.command:
         cmd: "ansible-sign --debug project gpg-sign ."
-        chdir: "{{ working_dir }}"
+        chdir: "{{ repo_dir }}"
       environment:
         ANSIBLE_SIGN_GPG_PASSPHRASE: "{{ passphrase }}"
       changed_when: false
@@ -79,3 +87,13 @@
       ansible.builtin.fail:
         msg: ansible-sign for Ansible code branch failed
       when: __ansible_sign_output.rc != 0
+
+    - name: Publish the ansible-signing files back to the repo
+      ansible.scm.git_publish:
+        commit:
+          message: "Build Pipeline: Signed the code with ansible-sign"
+        path: "{{ repo_dir }}"
+        token: "{{ github_token }}"
+        user:
+          name: "AAP Build Pipeline"
+          email: "ansible@localhost"

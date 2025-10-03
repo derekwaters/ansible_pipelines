@@ -42,14 +42,22 @@ controller_credential_types:
         GPG_PRIVATE_KEY_FILE: '{{ tower.filename.private_key_file }}'
       file:
         template.private_key_file: '{{ private_key }}'
-
-controller_credentials:
-  - name: "github-api-token"
-    description: "API Token for GitHub"
-    organization: "build"
-    credential_type: "GitHub Personal Access Token"
+  - name: "github-pat-for-build"
+    description: "Personal Access Token for GitHub access"
     inputs:
-      token: "{{ github_api_token }}"
+      fields:
+        - id: token
+          type: string
+          label: GitHub Personal Access Token
+          secret: true
+          multiline: false
+      required:
+        - token
+    injectors:
+      env:
+        GITHUB_PAT: '{{ token }}'
+        
+controller_credentials:
   - name: "key-signing-test"
     description: "GPG Key for signing Ansible code for test environment"
     organization: "build"
@@ -57,6 +65,12 @@ controller_credentials:
     inputs:
       private_key: "{{ key-signing-private-key }}"
       passphrase: "{{ key-signing-passphrase }}"
+  - name: "github-personal-access-token"
+    description: "GitHub PAT for Build Pipelines"
+    organization: "build"
+    credential_type: "github-pat-for-build"
+    inputs:
+      token: "{{ github_api_token }}"
 
 controller_projects:
    - name: "build_pipelines"
@@ -200,6 +214,7 @@ controller_workflows:
         always_nodes: []
         credentials:
           - "key-signing-test"
+          - "github-personal-access-token"
 
       - identifier: deploy_to_dev
         unified_job_template: "deploy_to_dev"
