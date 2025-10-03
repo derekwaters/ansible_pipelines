@@ -37,5 +37,8 @@ ee_list:
         - pinentry
       python:
         - ansible-sign
+      galaxy:
+        collections:
+          - ansible.scm
     options:
       package_manager_path: /usr/bin/microdnf
