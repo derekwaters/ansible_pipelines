@@ -38,10 +38,10 @@ controller_credential_types:
         - private_key
     injectors:
       env:
-        GPG_PASSPHRASE: '{{ passphrase }}'
-        GPG_PRIVATE_KEY_FILE: '{{ tower.filename.private_key_file }}'
+        GPG_PASSPHRASE: !unsafe '{{ passphrase }}'
+        GPG_PRIVATE_KEY_FILE: !unsafe '{{ tower.filename.private_key_file }}'
       file:
-        template.private_key_file: '{{ private_key }}'
+        template.private_key_file: !unsafe '{{ private_key }}'
   - name: "github-pat-for-build"
     description: "Personal Access Token for GitHub access"
     inputs:
@@ -55,7 +55,7 @@ controller_credential_types:
         - token
     injectors:
       env:
-        GITHUB_PAT: '{{ token }}'
+        GITHUB_PAT: !unsafe '{{ token }}'
         
 controller_credentials:
   - name: "key-signing-test"
@@ -63,8 +63,8 @@ controller_credentials:
     organization: "build"
     credential_type: "gpg-signing-keys"
     inputs:
-      private_key: "{{ key-signing-private-key }}"
-      passphrase: "{{ key-signing-passphrase }}"
+      private_key: "{{ key_signing_private_key }}"
+      passphrase: "{{ key_signing_passphrase }}"
   - name: "github-personal-access-token"
     description: "GitHub PAT for Build Pipelines"
     organization: "build"
@@ -105,6 +105,11 @@ controller_execution_environments:
     description: "Execution Environment used for build functions"
     organization: "build"
     image: "quay.io/rh-ee-dwaters/pipelines-ee"
+    state: present
+  - name: "sign_ee"
+    description: "Execution Environment used for signing functions"
+    organization: "build"
+    image: "quay.io/rh-ee-dwaters/sign-ee"
     state: present
 
 controller_templates:
@@ -172,6 +177,7 @@ controller_templates:
     project: "build_pipelines"
     execution_environment: "sign_ee"
     ask_variables_on_launch: true
+    ask_credential_on_launch: true
     state: present
 
 controller_workflows:

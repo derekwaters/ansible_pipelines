@@ -1,3 +1,4 @@
 .vscode/
 inventory.yaml
 inventory
+*.pgp
