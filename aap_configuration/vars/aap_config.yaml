@@ -30,17 +30,24 @@ controller_credential_types:
           label: GPG Private Key Data
           secret: true
           multiline: true
+        - id: public_key
+          type: string
+          label: GPG Public Key Data
+          multiline: true
         - id: passphrase
           type: string
           label: Passphrase
           secret: true
       required:
+        - public_key
         - private_key
     injectors:
       env:
         GPG_PASSPHRASE: !unsafe '{{ passphrase }}'
+        GPG_PUBLIC_KEY_FILE: !unsafe '{{ tower.filename.public_key_file }}'
         GPG_PRIVATE_KEY_FILE: !unsafe '{{ tower.filename.private_key_file }}'
       file:
+        template.public_key_file: !unsafe '{{ public_key }}'
         template.private_key_file: !unsafe '{{ private_key }}'
   - name: "github-pat-for-build"
     description: "Personal Access Token for GitHub access"
@@ -63,8 +70,25 @@ controller_credentials:
     organization: "build"
     credential_type: "gpg-signing-keys"
     inputs:
-      private_key: "{{ key_signing_private_key }}"
-      passphrase: "{{ key_signing_passphrase }}"
+      public_key: "{{ key_signing_test_public_key}}"
+      private_key: "{{ key_signing_test_private_key }}"
+      passphrase: "{{ key_signing_test_passphrase }}"
+  - name: "key-signing-preprod"
+    description: "GPG Key for signing Ansible code for preprod environment"
+    organization: "build"
+    credential_type: "gpg-signing-keys"
+    inputs:
+      public_key: "{{ key_signing_preprod_public_key}}"
+      private_key: "{{ key_signing_preprod_private_key }}"
+      passphrase: "{{ key_signing_preprod_passphrase }}"
+  - name: "key-signing-prod"
+    description: "GPG Key for signing Ansible code for prod environment"
+    organization: "build"
+    credential_type: "gpg-signing-keys"
+    inputs:
+      public_key: "{{ key_signing_prod_public_key}}"
+      private_key: "{{ key_signing_prod_private_key }}"
+      passphrase: "{{ key_signing_prod_passphrase }}"
   - name: "github-personal-access-token"
     description: "GitHub PAT for Build Pipelines"
     organization: "build"
@@ -149,6 +173,30 @@ controller_templates:
       github_api_token: "{{ github_api_token }}"
     state: present
 
+  - name: "deploy_to_preprod"
+    playbook: "aap_configuration/playbooks/deploy_to_preprod.yaml"
+    job_type: "run"
+    organization: "build"
+    inventory: "build_servers"
+    project: "build_pipelines"
+    execution_environment: "pipelines_ee"
+    ask_variables_on_launch: true
+    extra_vars:
+      github_api_token: "{{ github_api_token }}"
+    state: present
+
+  - name: "deploy_to_prod"
+    playbook: "aap_configuration/playbooks/deploy_to_prod.yaml"
+    job_type: "run"
+    organization: "build"
+    inventory: "build_servers"
+    project: "build_pipelines"
+    execution_environment: "pipelines_ee"
+    ask_variables_on_launch: true
+    extra_vars:
+      github_api_token: "{{ github_api_token }}"
+    state: present
+
   - name: "build_failed_incident"
     playbook: "aap_configuration/playbooks/build_failed_incident.yaml"
     job_type: "run"
@@ -180,8 +228,19 @@ controller_templates:
     ask_credential_on_launch: true
     state: present
 
+  - name: "verify_signed_code"
+    playbook: "aap_configuration/playbooks/verify_signed_code.yaml"
+    job_type: "run"
+    organization: "build"
+    inventory: "build_servers"
+    project: "build_pipelines"
+    execution_environment: "sign_ee"
+    ask_variables_on_launch: true
+    ask_credential_on_launch: true
+    state: present
+
 controller_workflows:
-  - name: "01-tenant_code_push_pipeline"
+  - name: "01-test_tenant_code_push_pipeline"
     description: "Perform tests on tenant code pushes"
     organization: "build"
     inventory: "build_servers"
@@ -245,4 +304,149 @@ controller_workflows:
         always_nodes: []
         credentials: []
  
+  - name: "02-preprod_tenant_code_push_pipeline"
+    description: "Perform preprod tests on tenant code pushes"
+    organization: "build"
+    inventory: "build_servers"
+    state: present
+    extra_vars:
+      remote_repo: "tbd"
+      remote_branch: "preprod"
+      destination_email: "pipelines@company.com.au"
+      source_email: "aap_build_bot@company.com.au"
+    ask_variables_on_launch: true
+    simplified_workflow_nodes:
+      - identifier: verify_signed_code
+        unified_job_template: "verify_signed_code"
+        success_nodes:
+          - "precommit_checks"
+        failure_nodes:
+          - "build_failed_incident"
+        always_nodes: []
+        credentials: "key-signing-test"
+
+      - identifier: precommit_checks
+        unified_job_template: "precommit_checks"
+        success_nodes:
+          - "test_checks"
+        failure_nodes:
+          - "build_failed_incident"
+        always_nodes: []
+        credentials: []
+
+      - identifier: test_checks
+        unified_job_template: "test_checks"
+        success_nodes:
+          - "sign_code"
+        failure_nodes:
+          - "build_failed_incident"
+        always_nodes: []
+        credentials: []
+
+      - identifier: sign_code
+        unified_job_template: "sign_code"
+        success_nodes:
+          - "deploy_to_preprod"
+        failure_nodes:
+          - "build_failed_incident"
+        always_nodes: []
+        credentials:
+          - "key-signing-preprod"
+          - "github-personal-access-token"
+
+      - identifier: deploy_to_preprod
+        unified_job_template: "deploy_to_preprod"
+        success_nodes:
+          - "build_success_notification"
+        failure_nodes:
+          - "build_failed_incident"
+        always_nodes: []
+        credentials: []
+
+      - identifier: build_failed_incident
+        unified_job_template: "build_failed_incident"
+        success_nodes: []
+        failure_nodes: []
+        always_nodes: []
+        credentials: []
+
+      - identifier: build_success_notification
+        unified_job_template: "build_success_notification"
+        success_nodes: []
+        failure_nodes: []
+        always_nodes: []
+        credentials: []
+
+  - name: "03-prod_tenant_code_push_pipeline"
+    description: "Perform prod tests on tenant code pushes"
+    organization: "build"
+    inventory: "build_servers"
+    state: present
+    extra_vars:
+      remote_repo: "tbd"
+      remote_branch: "prod"
+      destination_email: "pipelines@company.com.au"
+      source_email: "aap_build_bot@company.com.au"
+    ask_variables_on_launch: true
+    simplified_workflow_nodes:
+      - identifier: verify_signed_code
+        unified_job_template: "verify_signed_code"
+        success_nodes:
+          - "precommit_checks"
+        failure_nodes:
+          - "build_failed_incident"
+        always_nodes: []
+        credentials: "key-signing-preprod"
+
+      - identifier: precommit_checks
+        unified_job_template: "precommit_checks"
+        success_nodes:
+          - "test_checks"
+        failure_nodes:
+          - "build_failed_incident"
+        always_nodes: []
+        credentials: []
+
+      - identifier: test_checks
+        unified_job_template: "test_checks"
+        success_nodes:
+          - "sign_code"
+        failure_nodes:
+          - "build_failed_incident"
+        always_nodes: []
+        credentials: []
+
+      - identifier: sign_code
+        unified_job_template: "sign_code"
+        success_nodes:
+          - "deploy_to_prod"
+        failure_nodes:
+          - "build_failed_incident"
+        always_nodes: []
+        credentials:
+          - "key-signing-prod"
+          - "github-personal-access-token"
+
+      - identifier: deploy_to_prod
+        unified_job_template: "deploy_to_prod"
+        success_nodes:
+          - "build_success_notification"
+        failure_nodes:
+          - "build_failed_incident"
+        always_nodes: []
+        credentials: []
+
+      - identifier: build_failed_incident
+        unified_job_template: "build_failed_incident"
+        success_nodes: []
+        failure_nodes: []
+        always_nodes: []
+        credentials: []
+
+      - identifier: build_success_notification
+        unified_job_template: "build_success_notification"
+        success_nodes: []
+        failure_nodes: []
+        always_nodes: []
+        credentials: []
 ...
