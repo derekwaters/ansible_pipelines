@@ -95,19 +95,76 @@ controller_credentials:
     credential_type: "github-pat-for-build"
     inputs:
       token: "{{ github_api_token }}"
+  - name: "test-signing-validation-credential"
+    description: "GPG Public Key for validating signed code in Test environment"
+    organization: "build"
+    credential_type: "GPG Public Key"
+    inputs:
+      gpg_public_key: "{{ key_signing_test_public_key}}"
+  - name: "preprod-signing-validation-credential"
+    description: "GPG Public Key for validating signed code in Preprod environment"
+    organization: "build"
+    credential_type: "GPG Public Key"
+    inputs:
+      gpg_public_key: "{{ key_signing_preprod_public_key}}"
+  - name: "prod-signing-validation-credential"
+    description: "GPG Public Key for validating signed code in Prod environment"
+    organization: "build"
+    credential_type: "GPG Public Key"
+    inputs:
+      gpg_public_key: "{{ key_signing_prod_public_key}}"
 
 controller_projects:
-   - name: "build_pipelines"
-     description: "Automated Build Pipelines"
-     organization: "build"
-     scm_type: git
-     scm_url: "https://github.com/derekwaters/ansible_pipelines.git"
-     scm_branch: main
-     scm_clean: true
-     scm_update_on_launch: true
-     update_project: true
-     wait: true
-     state: present
+  - name: "build_pipelines"
+    description: "Automated Build Pipelines"
+    organization: "build"
+    scm_type: git
+    scm_url: "https://github.com/derekwaters/ansible_pipelines.git"
+    scm_branch: main
+    scm_clean: true
+    scm_update_on_launch: true
+    update_project: true
+    wait: true
+    state: present
+  - name: "test_project"
+    description: "Validate test code signing"
+    organization: "build"
+    scm_type: git
+    scm_url: "https://github.com/derekwaters/sample_tenant.git"
+    scm_branch: test
+    scm_clean: true
+    scm_update_on_launch: true
+    signature_validation_credential: "test-signing-validation-credential"
+    # This project won't exist yet
+    update_project: false
+    wait: false
+    state: present
+  - name: "preprod_project"
+    description: "Validate preprod code signing"
+    organization: "build"
+    scm_type: git
+    scm_url: "https://github.com/derekwaters/sample_tenant.git"
+    scm_branch: preprod
+    scm_clean: true
+    scm_update_on_launch: true
+    signature_validation_credential: "preprod-signing-validation-credential"
+    # This project won't exist yet
+    update_project: false
+    wait: false
+    state: present
+  - name: "prod_project"
+    description: "Validate prod code signing"
+    organization: "build"
+    scm_type: git
+    scm_url: "https://github.com/derekwaters/sample_tenant.git"
+    scm_branch: prod
+    scm_clean: true
+    scm_update_on_launch: true
+    signature_validation_credential: "prod-signing-validation-credential"
+    # This project won't exist yet
+    update_project: false
+    wait: false
+    state: present
 
 controller_inventories:
   - name: "build_servers"
