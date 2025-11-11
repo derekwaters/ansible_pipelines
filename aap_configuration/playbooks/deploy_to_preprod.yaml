@@ -1,0 +1,13 @@
+---
+- name: Deploy branch to preprod
+  hosts: all
+  gather_facts: false
+  vars:
+    remote_repo: "something"
+    remote_branch: "preprod"
+    working_dir: "/tmp/working"
+
+  tasks:
+    - name: Deploy the branch to preprod
+      ansible.builtin.debug:
+        msg: "TODO: Deploy this branch to the preprod environment"
