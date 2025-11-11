@@ -24,10 +24,11 @@ repos:
           - ansible-core>=2.13
           - yamllint>=1.26,<2.0
 
-  - repo: https://github.com/DavidAnson/markdownlint-cli2
-    rev: v0.17.2
-    hooks:
-      - id: markdownlint-cli2
+# NOTE: Commented out do an issue with a node dependency
+#  - repo: https://github.com/DavidAnson/markdownlint-cli2
+#    rev: v0.17.2
+#    hooks:
+#      - id: markdownlint-cli2
 
   # Python code formatting hook - this could be optional
   - repo: https://github.com/psf/black

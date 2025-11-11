@@ -1,2 +1,2 @@
-include inventory
+global-exclude *
 recursive-include playbooks *.yml
