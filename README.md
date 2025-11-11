@@ -11,7 +11,7 @@ This repo contains the following components:
 - test : This folder only contains testing files
 
 ## Prerequisites
-Building the pipelines requires an AAP install and credentials with the ability to deploy the config-as-code components. You will also need access details for an image repository if you are going to build the execution environments yourself. Finally you will need GPG signing keys that will be used to sign the ansible code once it is tested. See below for details on how to generate and export the relevant keys.
+Building the pipelines requires an AAP install and credentials with the ability to deploy the config-as-code components. You will also need access details for an image repository if you are going to build the execution environments yourself. Finally you will need GPG signing keys (for test, preprod and prod pipeliens) that will be used to sign the ansible code once it is tested. See below for details on how to generate and export the relevant keys.
 
 ## Generate signing keys
 ```

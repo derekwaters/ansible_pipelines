@@ -1,0 +1,13 @@
+---
+- name: Deploy branch to prod
+  hosts: all
+  gather_facts: false
+  vars:
+    remote_repo: "something"
+    remote_branch: "prod"
+    working_dir: "/tmp/working"
+
+  tasks:
+    - name: Deploy the branch to prod
+      ansible.builtin.debug:
+        msg: "TODO: Deploy this branch to the prod environment"

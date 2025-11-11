@@ -15,10 +15,17 @@
         single_branch: true
         version: "{{ remote_branch }}"
 
-    - name: Run some tests
-      ansible.builtin.debug:
-        msg: "TODO: Run some tests"
+    - name: Check whether molecule folder exists
+      ansible.builtin.stat:
+        path: "{{ working_dir }}/molecule"
+      register: __molecule_folder
+
+    - name: Run molecule tests if folder exists
+      ansible.builtin.command:
+        cmd: "molecule test"
+        chdir: "{{ working_dir }}"
       register: __test_output
+      when: __molecule_folder.stat.exists
 
     - name: Update the build_log summary
       ansible.builtin.set_fact:

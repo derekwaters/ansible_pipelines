@@ -8,8 +8,15 @@ ansible-playbook -i inventory \
   (-e aap_validate_certs=true) \
   -e github_username=something \
   -e github_api_token=something \
-  -e key_signing_passphrase=gpg_passphrase \
-  -e key_signing_private_key=gpg_private_key_data \
+  -e key_signing_test_public_key=gpg_public_key_data \
+  -e key_signing_test_passphrase=gpg_passphrase \
+  -e key_signing_test_private_key=gpg_private_key_data \
+  -e key_signing_preprod_public_key=gpg_public_key_data \
+  -e key_signing_preprod_passphrase=gpg_passphrase \
+  -e key_signing_preprod_private_key=gpg_private_key_data \
+  -e key_signing_prod_public_key=gpg_public_key_data \
+  -e key_signing_prod_passphrase=gpg_passphrase \
+  -e key_signing_prod_private_key=gpg_private_key_data \
   setup_aap.yaml
 ```
 
