@@ -10,6 +10,6 @@
     - name: Notify the results
       community.general.mail:
         to: "{{ destination_email }}"
-        subject: "Build Log for {{ repo_name }} for branch {{ branch_name }}"
+        subject: "Build Log for {{ remote_repo }} for branch {{ remote_branch }}"
         body: "{{ build_log }}"
         from: "{{ source_email }}"
