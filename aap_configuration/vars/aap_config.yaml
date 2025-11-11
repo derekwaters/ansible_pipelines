@@ -19,7 +19,7 @@ aap_applications:
     description: "Application for access to build pipelines"
     authorization_grant_type: password
     client_type: public
-    
+
 controller_credential_types:
   - name: "gpg-signing-keys"
     description: "Keys for signing Ansible code"
@@ -63,7 +63,7 @@ controller_credential_types:
     injectors:
       env:
         GITHUB_PAT: !unsafe '{{ token }}'
-        
+
 controller_credentials:
   - name: "key-signing-test"
     description: "GPG Key for signing Ansible code for test environment"
@@ -122,7 +122,7 @@ controller_hosts:
     state: present
     enabled: true
     variables:
-      ansible_connection: local 
+      ansible_connection: local
 
 controller_execution_environments:
   - name: "pipelines_ee"
@@ -303,7 +303,7 @@ controller_workflows:
         failure_nodes: []
         always_nodes: []
         credentials: []
- 
+
   - name: "02-preprod_tenant_code_push_pipeline"
     description: "Perform preprod tests on tenant code pushes"
     organization: "build"
@@ -323,7 +323,9 @@ controller_workflows:
         failure_nodes:
           - "build_failed_incident"
         always_nodes: []
-        credentials: "key-signing-test"
+        credentials:
+          - "key-signing-test"
+          - "github-personal-access-token"
 
       - identifier: precommit_checks
         unified_job_template: "precommit_checks"
@@ -396,7 +398,9 @@ controller_workflows:
         failure_nodes:
           - "build_failed_incident"
         always_nodes: []
-        credentials: "key-signing-preprod"
+        credentials:
+          - "key-signing-preprod"
+          - "github-personal-access-token"
 
       - identifier: precommit_checks
         unified_job_template: "precommit_checks"

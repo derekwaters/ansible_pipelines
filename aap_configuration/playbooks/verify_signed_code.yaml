@@ -29,13 +29,12 @@
 
     - name: Retrieve the repo
       ansible.scm.git_retrieve:
-        branch:
-          name: "{{ remote_branch }}"
         origin:
           url: "{{ remote_repo }}"
           token: "{{ github_token }}"
         upstream:
           url: "{{ remote_repo }}"
+          branch: "{{ remote_branch }}"
         parent_directory: "{{ working_dir }}"
       register: __git_receive_output
 
