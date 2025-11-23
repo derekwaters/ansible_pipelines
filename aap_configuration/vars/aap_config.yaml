@@ -185,12 +185,12 @@ controller_execution_environments:
   - name: "pipelines_ee"
     description: "Execution Environment used for build functions"
     organization: "build"
-    image: "quay.io/rh-ee-dwaters/pipelines-ee"
+    image: "quay.io/rh-ee-dwaters/pipelines-ee-multiarch"
     state: present
   - name: "sign_ee"
     description: "Execution Environment used for signing functions"
     organization: "build"
-    image: "quay.io/rh-ee-dwaters/sign-ee"
+    image: "quay.io/rh-ee-dwaters/sign-ee-multiarch"
     state: present
 
 controller_templates:
@@ -510,4 +510,81 @@ controller_workflows:
         failure_nodes: []
         always_nodes: []
         credentials: []
+
+  - name: "test_tenant_code"
+    description: "Perform tests on tenant code pushes"
+    organization: "build"
+    inventory: "build_servers"
+    state: present
+    extra_vars:
+      remote_repo: "tbd"
+      remote_branch: "dev"
+      destination_email: "pipelines@company.com.au"
+      source_email: "aap_build_bot@company.com.au"
+    ask_variables_on_launch: true
+    simplified_workflow_nodes:
+      - identifier: precommit_checks
+        unified_job_template: "precommit_checks"
+        success_nodes:
+          - "test_checks"
+        failure_nodes:
+          - "build_failed_incident"
+        always_nodes: []
+        credentials: []
+
+      - identifier: test_checks
+        unified_job_template: "test_checks"
+        success_nodes:
+          - "build_success_notification"
+        failure_nodes:
+          - "build_failed_incident"
+        always_nodes: []
+        credentials: []
+
+      - identifier: build_failed_incident
+        unified_job_template: "build_failed_incident"
+        success_nodes: []
+        failure_nodes: []
+        always_nodes: []
+        credentials: []
+
+      - identifier: build_success_notification
+        unified_job_template: "build_success_notification"
+        success_nodes: []
+        failure_nodes: []
+        always_nodes: []
+        credentials: []
+
+# EDA Configuration Values
+eda_projects:
+  - name: "eda_pipelines"
+    description: "Automated Build Pipelines"
+    organization: "build"
+    url: "https://github.com/derekwaters/ansible_pipelines.git"
+    scm_branch: main
+    sync: true
+    state: present
+
+#eda_configuration_credentials_secure_logging: false
+eda_credentials:
+  - name: "aap_job_access"
+    description: "AAP Credentials for job execution"
+    credential_type: "Red Hat Ansible Automation Platform"
+    organization: "build"
+    inputs:
+      host: "https://{{ aap_hostname }}/api/controller/"
+      username: "{{ aap_username }}"
+      password: "{{ aap_password }}"
+      verify_ssl: "{{ aap_validate_certs | default(true) | bool }}"
+
+eda_rulebook_activations:
+  - name: "github_event_webhook"
+    description: "Hook to listen for changes in GitHub"
+    project: "eda_pipelines"
+    rulebook: "github_pipelines.yaml"
+    organization: "build"
+    decision_environment: "Hub Default Decision Environment"
+    eda_credentials:
+      - "aap_job_access"
+    state: present
 ...

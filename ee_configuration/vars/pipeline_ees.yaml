@@ -1,6 +1,6 @@
 ---
 ee_builder_dir_clean: false
-ee_builder_dir: "/tmp/"
+ee_builder_dir: "/tmp/build/"
 ee_base_registry_username: "{{ base_registry_username }}"
 ee_base_registry_password: "{{ base_registry_password }}"
 ee_registry_dest: "{{ registry_destination }}"
