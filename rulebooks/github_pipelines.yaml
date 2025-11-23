@@ -1,0 +1,68 @@
+---
+- name: Listen for events from GitHub
+  hosts: all
+  sources:
+    - name: Listen to default webhook messages on port 5001
+      ansible.eda.webhook:
+        host: 0.0.0.0
+        port: 5001
+  rules:
+    - name: Merge To Test Operation
+      condition: >
+        event.payload.operation == "merge" and
+        event.payload.branch == "test"
+      action:
+        run_workflow_template:
+          organization: "build"
+          name: "01-test_tenant_code_push_pipeline"
+          job_args:
+            extra_vars:
+              "remote_branch": "test"
+              "remote_repo": "{{ something_from_the_event.payload }}"
+    - name: Merge To PreProd Operation
+      condition: >
+        event.payload.operation == "merge" and
+        event.payload.branch == "preprod"
+      action:
+        run_workflow_template:
+          organization: "build"
+          name: "02-preprod_tenant_code_push_pipeline"
+          job_args:
+            extra_vars:
+              "remote_branch": "preprod"
+              "remote_repo": "{{ something_from_the_event.payload }}"
+    - name: Merge To Prod Operation
+      condition: >
+        event.payload.operation == "merge" and
+        event.payload.branch == "prod"
+      action:
+        run_workflow_template:
+          organization: "build"
+          name: "03-prod_tenant_code_push_pipeline"
+          job_args:
+            extra_vars:
+              "remote_branch": "prod"
+              "remote_repo": "{{ something_from_the_event.payload }}"
+    - name: Push To Dev Operation
+      condition: >
+        event.payload.operation == "push" and
+        event.payload.branch != "test" and
+        event.payload.branch != "preprod" and
+        event.payload.branch != "prod"
+      action:
+        run_workflow_template:
+          organization: "build"
+          name: "test_tenant_code"
+          job_args:
+            extra_vars:
+              "remote_branch": "{{ something_from_the_event.payload }}"
+              "remote_repo": "{{ something_from_the_event.payload }}"
+
+# NOTE: This is commented out as it results in a lot of debug
+# in your activation log. But it can give you the full details
+# of the event structure being sent
+    - name: Default debug
+      condition: event.payload is defined
+      actions:
+        - debug:
+            var: event.payload
