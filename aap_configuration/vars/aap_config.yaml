@@ -576,7 +576,26 @@ eda_credentials:
       username: "{{ aap_username }}"
       password: "{{ aap_password }}"
       verify_ssl: "{{ aap_validate_certs | default(true) | bool }}"
+  - name: "github_hmac_token"
+    description: "GitHub HMAC Token for remote webhook routing"
+    credential_type: "GitHub Event Stream"
+    organization: "build"
+    inputs:
+      "auth_type": "hmac"
+      "hash_algorithm": "sha256"
+      "http_header_key": "X-Hub-Signature-256"
+      "secret": "{{ github_hmac_token }}"
+      "signature_encoding": "hex"
+      "signature_prefix": "sha256="
 
+eda_event_streams:
+  - name: "github_webhook_stream"
+    credential_name: "github_hmac_token"
+    organization: "build"
+    forward_events: true
+    state: "present"
+
+eda_configuration_rulebook_activations_secure_logging: false
 eda_rulebook_activations:
   - name: "github_event_webhook"
     description: "Hook to listen for changes in GitHub"
@@ -584,7 +603,11 @@ eda_rulebook_activations:
     rulebook: "github_pipelines.yaml"
     organization: "build"
     decision_environment: "Hub Default Decision Environment"
+    enabled: false
     eda_credentials:
       - "aap_job_access"
+    event_streams:
+      - source_index: 0
+        event_stream: "github_webhook_stream"
     state: present
 ...
