@@ -9,8 +9,9 @@
   rules:
     - name: Merge To Test Operation
       condition: >
-        event.payload.operation == "merge" and
-        event.payload.branch == "test"
+        event.payload.action == "closed" and
+        event.payload.pull_request.merged == true and
+        event.payload.pull_request.base.ref == "test"
       action:
         run_workflow_template:
           organization: "build"
@@ -18,11 +19,12 @@
           job_args:
             extra_vars:
               "remote_branch": "test"
-              "remote_repo": "{{ something_from_the_event.payload }}"
+              "remote_repo": "{{ event.payload.repository.name }}"
     - name: Merge To PreProd Operation
       condition: >
-        event.payload.operation == "merge" and
-        event.payload.branch == "preprod"
+        event.payload.action == "closed" and
+        event.payload.pull_request.merged == true and
+        event.payload.pull_request.base.ref == "preprod"
       action:
         run_workflow_template:
           organization: "build"
@@ -30,11 +32,12 @@
           job_args:
             extra_vars:
               "remote_branch": "preprod"
-              "remote_repo": "{{ something_from_the_event.payload }}"
+              "remote_repo": "{{ event.payload.repository.name }}"
     - name: Merge To Prod Operation
       condition: >
-        event.payload.operation == "merge" and
-        event.payload.branch == "prod"
+        event.payload.action == "closed" and
+        event.payload.pull_request.merged == true and
+        event.payload.pull_request.base.ref == "prod"
       action:
         run_workflow_template:
           organization: "build"
@@ -42,21 +45,22 @@
           job_args:
             extra_vars:
               "remote_branch": "prod"
-              "remote_repo": "{{ something_from_the_event.payload }}"
+              "remote_repo": "{{ event.payload.repository.name }}"
     - name: Push To Dev Operation
       condition: >
-        event.payload.operation == "push" and
-        event.payload.branch != "test" and
-        event.payload.branch != "preprod" and
-        event.payload.branch != "prod"
+        event.payload.action == "closed" and
+        event.payload.push.merged == true and
+        event.payload.push.base.ref != "test" and
+        event.payload.push.base.ref != "preprod" and
+        event.payload.push.base.ref != "prod"
       action:
         run_workflow_template:
           organization: "build"
           name: "test_tenant_code"
           job_args:
             extra_vars:
-              "remote_branch": "{{ something_from_the_event.payload }}"
-              "remote_repo": "{{ something_from_the_event.payload }}"
+              "remote_branch": "{{ event.payload.push.base.ref }}"
+              "remote_repo": "{{ event.payload.repository.name }}"
 
 # NOTE: This is commented out as it results in a lot of debug
 # in your activation log. But it can give you the full details
