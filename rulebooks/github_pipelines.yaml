@@ -61,14 +61,16 @@
               "remote_branch": "{{ event.payload.push.base.ref }}"
               "remote_repo": "{{ event.payload.repository.html_url }}"
 
-# NOTE: This is commented out as it results in a lot of debug
-# in your activation log. But it can give you the full details
-# of the event structure being sent
+    # NOTE: This is commented out as it results in a lot of debug
+    # in your activation log. But it can give you the full details
+    # of the event structure being sent
     - name: Earlier default debug
       condition: event.payload.payload is defined
       actions:
         - debug:
             var: event.payload.payload
+        - debug:
+            var: event.payload.payload.ref
     - name: Default debug
       condition: event.payload is defined
       actions:
