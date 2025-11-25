@@ -19,7 +19,7 @@
           job_args:
             extra_vars:
               "remote_branch": "test"
-              "remote_repo": "{{ event.payload.repository.name }}"
+              "remote_repo": "{{ event.payload.repository.html_url }}"
     - name: Merge To PreProd Operation
       condition: >
         event.payload.action == "closed" and
@@ -32,7 +32,7 @@
           job_args:
             extra_vars:
               "remote_branch": "preprod"
-              "remote_repo": "{{ event.payload.repository.name }}"
+              "remote_repo": "{{ event.payload.repository.html_url }}"
     - name: Merge To Prod Operation
       condition: >
         event.payload.action == "closed" and
@@ -45,7 +45,7 @@
           job_args:
             extra_vars:
               "remote_branch": "prod"
-              "remote_repo": "{{ event.payload.repository.name }}"
+              "remote_repo": "{{ event.payload.repository.html_url }}"
     - name: Push To Dev Operation
       condition: >
         event.payload.action == "closed" and
@@ -60,7 +60,7 @@
           job_args:
             extra_vars:
               "remote_branch": "{{ event.payload.push.base.ref }}"
-              "remote_repo": "{{ event.payload.repository.name }}"
+              "remote_repo": "{{ event.payload.repository.html_url }}"
 
 # NOTE: This is commented out as it results in a lot of debug
 # in your activation log. But it can give you the full details
