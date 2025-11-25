@@ -65,8 +65,9 @@
         var: __ansible_sign_output
 
     - name: Update the build_log summary
-      ansible.builtin.set_fact:
-        build_log: "{{ __ansible_sign_output }} ~ {{ build_log | default('') }}"
+      ansible.builtin.set_stats:
+        data:
+          build_log: "{{ __ansible_sign_output }} ~ {{ build_log | default('') }}"
 
     - name: Validate the response
       ansible.builtin.fail:
