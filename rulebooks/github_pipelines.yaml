@@ -7,16 +7,8 @@
         host: 0.0.0.0
         port: 5001
       filters:
-        - ansible.eda.json_filter:
-            include_keys:
-              - payload
-              - repository
-              - name
-              - full_name
-              - pusher
-              - refs
-              - action
-              - pull_request
+        - ansible.eda.event_splitter:
+            splitter_key: payload
   rules:
     - name: Merge To Test Operation
       condition: >
