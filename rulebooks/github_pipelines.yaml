@@ -48,11 +48,10 @@
               "remote_repo": "{{ event.payload.repository.html_url }}"
     - name: Push To Dev Operation
       condition: >
-        event.payload.action == "closed" and
-        event.payload.push.merged == true and
-        event.payload.push.base.ref != "test" and
-        event.payload.push.base.ref != "preprod" and
-        event.payload.push.base.ref != "prod"
+        event.payload.payload[0].pusher is defined and
+        event.payload.payload[0].ref != "refs/heads/test" and
+        event.payload.payload[0].ref != "refs/heads/preprod" and
+        event.payload.payload[0].ref != "refs/heads/prod"
       action:
         run_workflow_template:
           organization: "build"
