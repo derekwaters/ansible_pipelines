@@ -6,9 +6,6 @@
       ansible.eda.webhook:
         host: 0.0.0.0
         port: 5001
-      filters:
-        - ansible.eda.event_splitter:
-            splitter_key: payload
   rules:
     - name: Merge To Test Operation
       condition: >
@@ -51,10 +48,10 @@
               "remote_repo": "{{ event.payload.repository.html_url }}"
     - name: Push To Dev Operation
       condition: >
-        event.payload.payload[0].pusher is defined and
-        event.payload.payload[0].ref != "refs/heads/test" and
-        event.payload.payload[0].ref != "refs/heads/preprod" and
-        event.payload.payload[0].ref != "refs/heads/prod"
+        event.payload.pusher is defined and
+        event.payload.ref != "refs/heads/test" and
+        event.payload.ref != "refs/heads/preprod" and
+        event.payload.ref != "refs/heads/prod"
       action:
         run_workflow_template:
           organization: "build"
@@ -67,13 +64,6 @@
     # NOTE: This is commented out as it results in a lot of debug
     # in your activation log. But it can give you the full details
     # of the event structure being sent
-    - name: Earlier default debug
-      condition: event.payload.payload is defined
-      actions:
-        - debug:
-            var: event.payload.payload
-        - debug:
-            var: event.payload.payload.ref
     - name: Default debug
       condition: event.payload is defined
       actions:
