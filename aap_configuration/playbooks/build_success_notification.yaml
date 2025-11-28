@@ -7,9 +7,13 @@
     source_email: "aap_build_bot@company.com.au"
 
   tasks:
+    #- name: Notify the results
+    #  community.general.mail:
+    #    to: "{{ destination_email }}"
+    #    subject: "Build Log for {{ remote_repo }} for branch {{ remote_branch }}"
+    #    body: "{{ build_log }}"
+    #    from: "{{ source_email }}"
+
     - name: Notify the results
-      community.general.mail:
-        to: "{{ destination_email }}"
-        subject: "Build Log for {{ remote_repo }} for branch {{ remote_branch }}"
-        body: "{{ build_log }}"
-        from: "{{ source_email }}"
+      ansible.builtin.debug:
+        msg: "TO: {{ destination_email }}\nFROM: {{ source_email }}\nSUBJECT: Build Log for {{ remote_repo }} for branch {{ remote_branch }}\n\n{{ build_log }}"
