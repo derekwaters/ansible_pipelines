@@ -6,3 +6,4 @@ collections:
   - name: infra.aap_configuration
   - name: infra.ee_utilities
   - name: ansible.controller
+  - name: containers.podman
