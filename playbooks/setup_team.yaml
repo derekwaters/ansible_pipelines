@@ -5,12 +5,11 @@
     - community.general
     - ansible.scm
   vars:
-    template_repo_path: "something"
+    # template_repo_path: "something"
     github_username: "something"
     github_email: "someone@somewhere.com"
     github_token: "something"
     github_api_url: "something"
-    github_org: "something"
     github_secret: "something"
     tenant_team: "tenant"
     aap_push_webhook_url: "aap_hostname/api/controller/v2/workflow_job_templates/by_name/tenant_code_push_pipeline"
@@ -25,24 +24,27 @@
 
     - name: Create github repo for the team
       community.general.github_repo:
-        username: "{{ github_username }}"
-        password: "{{ github_password }}"
+        access_token: "{{ github_token }}"
         api_url: "{{ github_api_url }}"
-        name: repo_name
-        organization: "{{ github_org }}"
+        name: "{{ repo_name }}"
+        organization: "{{ github_org | default(None) }}"
       register: _github_repo_details
 
     - name: Clone the repo locally
       ansible.scm.git_retrieve:
+        branch:
+          name: devel
+          duplicate_detection: false
         origin:
           token: "{{ github_token }}"
-          url: "{{ _github_repo_details.repo.git_url }}"
+          url: "{{ _github_repo_details.repo.html_url }}"
         parent_directory: "{{ temp_repo_path }}"
+      register: _github_retrieve_details
 
     - name: Add files from template_repo_path
       ansible.builtin.copy:
-        src: "{{ template_repo_path }}"
-        dest: "{{ temp_repo_path }}"
+        src: "{{ template_repo_path | default('../template_git_repo/') }}"
+        dest: "{{ _github_retrieve_details.path }}"
         mode: '0644'
 
     - name: Push the repo back to github
@@ -53,16 +55,27 @@
           name: "{{ github_username }}"
         commit:
           message: "Setup tenant git repo with initial contents"
-        path: "{{ temp_repo_path }}"
+        path: "{{ _github_retrieve_details.path }}"
         remove: true
 
     - name: "TODO: Add branch protection"
       ansible.builtin.debug:
         msg: "TODO: Add branch protection rules to repo"
 
+    - name: Set the GitHub remote repo tag
+      ansible.builtin.set_fact:
+        _remote_repo_tag: "derekwaters/{{ repo_name }}"
+
+    - name: Add the org name if it is set
+      ansible.builtin.set_fact:
+        _remote_repo_tag: "{{ github_org }}/{{ repo_name }}"
+      when:
+        - github_org is defined
+
+# TODO: Make this work - what is the repository name if we don't have an org?!
     - name: Add push webhook
       community.general.github_webhook:
-        repository: "{{ github_org }}/{{ repo_name }}"
+        repository: "{{ _remote_repo_tag }}"
         url: "{{ aap_push_webhook_url }}"
         content_type: json
         secret: "{{ github_secret }}"
@@ -71,11 +84,11 @@
           - push
         user: "{{ github_username }}"
         token: "{{ github_token }}"
-        github_url: "{{ github_api_url }}"
+        #github_url: "{{ github_api_url }}"
 
     - name: Add merge webhook
       community.general.github_webhook:
-        repository: "{{ github_org }}/{{ repo_name }}"
+        repository: "{{ _remote_repo_tag }}"
         url: "{{ aap_merge_webhook_url }}"
         content_type: json
         secret: "{{ github_secret }}"
