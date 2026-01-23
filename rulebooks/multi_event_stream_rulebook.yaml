@@ -1,0 +1,21 @@
+---
+- name: Listen for events from Event Streams
+  hosts: all
+  sources:
+    - name: Webhooks on port 6000
+      ansible.eda.webhook:
+        host: 0.0.0.0
+        port: 6000
+    - name: Webhooks on port 6001
+      ansible.eda.webhook:
+        host: 0.0.0.0
+        port: 6001
+  rules:
+    # NOTE: This is commented out as it results in a lot of debug
+    # in your activation log. But it can give you the full details
+    # of the event structure being sent
+    - name: Default debug
+      condition: event.payload is defined
+      actions:
+        - debug:
+            var: event.payload
