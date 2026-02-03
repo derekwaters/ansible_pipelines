@@ -21,7 +21,7 @@
 
         - name: Find all playbooks in the repository
           ansible.builtin.find:
-            paths: "{{ remote_branch }}"
+            paths: "{{ working_dir }}"
             recurse: true
             patterns:
               - "*.yaml"
