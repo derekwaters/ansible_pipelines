@@ -57,7 +57,7 @@
             body:
               model: "{{ ai_model_name }}"
               messages:
-                - content: "{{ __query_prefix}}{{ lookup('file', item) }}"
+                - content: "{{ __query_prefix}}{{ lookup('file', item.path) }}"
                   role: "user"
           register: __responses_result
           with_items: "{{ __playbooks.files }}"
