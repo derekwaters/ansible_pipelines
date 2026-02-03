@@ -40,6 +40,10 @@
               If the response is 'acceptable with noted risks' or 'unacceptable', please provide reasons why.
               Your response should always be in JSON format with no markdown wrapping.\n
 
+        - name: Debug the thing
+          ansible.builtin.debug:
+            var: __playbooks
+
         - name: For each playbook, send a request to the OpenAI-API-compatible endpoint to validate its intent
           ansible.builtin.uri:
             url: "{{ __responses_uri }}"
@@ -56,7 +60,7 @@
                 - content: "{{ __query_prefix}}{{ lookup('file', item) }}"
                   role: "user"
           register: __responses_result
-          with_items: "{{ __playbooks }}"
+          with_items: "{{ __playbooks.files }}"
           
         - name: Debug the response
           ansible.builtin.debug:
