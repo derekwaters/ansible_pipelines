@@ -218,6 +218,20 @@ controller_templates:
       github_api_token: "{{ github_api_token }}"
     state: present
 
+  - name: "test_code_intent"
+    playbook: "aap_configuration/playbooks/test_code_intent.yaml"
+    job_type: "run"
+    organization: "build"
+    inventory: "build_servers"
+    project: "build_pipelines"
+    execution_environment: "pipelines_ee"
+    ask_variables_on_launch: true
+    extra_vars:
+      ai_endpoint: "{{ ai_endpoint }}"
+      ai_token: "{{ ai_token }}"
+      ai_model_name: "{{ ai_model_name }}"
+    state: present
+
   - name: "deploy_to_dev"
     playbook: "aap_configuration/playbooks/deploy_to_dev.yaml"
     job_type: "run"
@@ -321,6 +335,15 @@ controller_workflows:
       - identifier: test_checks
         unified_job_template: "test_checks"
         success_nodes:
+          - "test_code_intent"
+        failure_nodes:
+          - "build_failed_incident"
+        always_nodes: []
+        credentials: []
+
+      - identifier: test_code_intent
+        unified_job_template: "test_code_intent"
+        success_nodes:
           - "sign_code"
         failure_nodes:
           - "build_failed_incident"
@@ -396,6 +419,15 @@ controller_workflows:
       - identifier: test_checks
         unified_job_template: "test_checks"
         success_nodes:
+          - "test_code_intent"
+        failure_nodes:
+          - "build_failed_incident"
+        always_nodes: []
+        credentials: []
+
+      - identifier: test_code_intent
+        unified_job_template: "test_code_intent"
+        success_nodes:
           - "sign_code"
         failure_nodes:
           - "build_failed_incident"
@@ -470,6 +502,15 @@ controller_workflows:
 
       - identifier: test_checks
         unified_job_template: "test_checks"
+        success_nodes:
+          - "test_code_intent"
+        failure_nodes:
+          - "build_failed_incident"
+        always_nodes: []
+        credentials: []
+
+      - identifier: test_code_intent
+        unified_job_template: "test_code_intent"
         success_nodes:
           - "sign_code"
         failure_nodes:

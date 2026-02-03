@@ -22,6 +22,14 @@ ansible-playbook -i inventory \
 ```
 
 
+If you want to use GenAI-driven code intent checking, also define the following vars:
+
+```
+  -e ai_endpoint=https://openai-api-compatible-endpoint.com/v1 \
+  -e ai_token=token \
+  -e ai_model_name=llm_name \
+```
+
 # Example of building the pipeline ee
 ```
 ansible-playbook -i inventory \
