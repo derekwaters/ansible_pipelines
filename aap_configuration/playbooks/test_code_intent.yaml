@@ -1,0 +1,67 @@
+---
+- name: Call on OpenAI compatible endpoint to validate playbook intent
+  hosts: all
+  connection: local
+
+  tasks:
+    - name: Check whether we can run Code Intent Check
+      when: ai_endpoint is not defined or ai_token is not defined or ai_model_name is not defined
+      ansible.builtin.debug:
+        msg: "Code Intent Check being skipped - need to define ai_endpoint, ai_token and ai_model_name"
+        
+    - name: Run the Code Intent AI check only if AI endpoints are defined
+      when: ai_endpoint is defined and ai_token is defined and ai_model_name is defined
+      block:
+        - name: Pull the code repository
+          ansible.builtin.git:
+            repo: "{{ remote_repo }}"
+            dest: "{{ working_dir }}"
+            single_branch: true
+            version: "{{ remote_branch }}"
+
+        - name: Find all playbooks in the repository
+          ansible.builtin.find:
+            paths: "{{ remote_branch }}"
+            recurse: true
+            patterns:
+              - "*.yaml"
+              - "*.yml"
+          register: __playbooks
+
+        - name: Built the response uri
+          ansible.builtin.set_fact:
+            __responses_uri: "{{ ai_endpoint }}/chat/completions"
+
+        - name: Build the prompt prefix
+          ansible.builtin.set_fact:
+            __query_prefix: |
+              Evaluate the following playbook for any potential security issues. 
+              Provide a response of either 'acceptable', 'acceptable with noted risks' or 'unacceptable'. 
+              If the response is 'acceptable with noted risks' or 'unacceptable', please provide reasons why.
+              Your response should always be in JSON format with no markdown wrapping.\n
+
+        - name: For each playbook, send a request to the OpenAI-API-compatible endpoint to validate its intent
+          ansible.builtin.uri:
+            url: "{{ __responses_uri }}"
+            return_content: true
+            method: POST
+            headers:
+              accept: "application/json"
+              Content-Type: "application/json"
+              Authorization: "Bearer {{ ai_token }}"
+            body_format: json
+            body:
+              model: "{{ ai_model_name }}"
+              messages:
+                - content: "{{ __query_prefix}}{{ lookup('file', item) }}"
+                  role: "user"
+          register: __responses_result
+          with_items: "{{ __playbooks }}"
+          
+        - name: Debug the response
+          ansible.builtin.debug:
+            var: __responses_result
+
+        - name: Output the security judgement
+          ansible.builtin.debug:
+            var: __responses_result.json.choices[0].message.content
