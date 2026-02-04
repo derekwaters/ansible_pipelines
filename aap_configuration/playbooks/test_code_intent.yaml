@@ -36,9 +36,9 @@
           ansible.builtin.set_fact:
             __query_prefix: |
               Evaluate the following playbook for any potential security issues. 
-              Provide a response of either 'acceptable', 'acceptable with noted risks' or 'unacceptable'. 
-              If the response is 'acceptable with noted risks' or 'unacceptable', please provide reasons why.
-              Your response should always be in JSON format with no markdown wrapping.\n
+              Provide a JSON-formatted response with a 'result' of either 'acceptable', 'acceptable with noted risks' or 'unacceptable'. 
+              If the 'result' is 'acceptable with noted risks' or 'unacceptable', please provide reasons why.
+              Your response should always be strictly in JSON format with a 'result' and a 'reasons' value.\n
 
         - name: Debug the thing
           ansible.builtin.debug:
